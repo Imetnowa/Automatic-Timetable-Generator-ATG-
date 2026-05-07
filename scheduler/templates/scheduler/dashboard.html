@@ -1,0 +1,25 @@
+{% extends "scheduler/base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Overview</h2>
+  <p>Welcome to the Automatic Timetable Generator. Use this tool to manage academic
+     resources and produce a conflict-free weekly schedule.</p>
+  <div class="grid">
+    <div class="stat"><div class="num">{{ counts.courses }}</div><div class="lbl">Courses</div></div>
+    <div class="stat"><div class="num">{{ counts.lecturers }}</div><div class="lbl">Lecturers</div></div>
+    <div class="stat"><div class="num">{{ counts.groups }}</div><div class="lbl">Class Groups</div></div>
+    <div class="stat"><div class="num">{{ counts.rooms }}</div><div class="lbl">Rooms</div></div>
+    <div class="stat"><div class="num">{{ counts.timeslots }}</div><div class="lbl">Time Slots</div></div>
+    <div class="stat"><div class="num">{{ counts.scheduled }}</div><div class="lbl">Scheduled Sessions</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Quick Actions</h2>
+  <div class="toolbar">
+    <a class="btn" href="{% url 'manage_data' %}">Manage Data</a>
+    <a class="btn btn-accent" href="{% url 'generate' %}">⚡ Generate Timetable</a>
+    <a class="btn btn-ghost" href="{% url 'timetable' %}">View Timetable</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "scheduler/base.html" %}
+{% load dict_extras %}
+{% block content %}
+<div class="card">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+    <h2 style="margin:0">📅 Generated Timetable</h2>
+    <div class="toolbar">
+      <a class="btn btn-accent" href="{% url 'generate' %}">⚡ Regenerate</a>
+      <a class="btn btn-ghost" href="{% url 'export_csv' %}">⬇ CSV</a>
+      <a class="btn btn-ghost" href="{% url 'export_pdf' %}">⬇ PDF</a>
+    </div>
+  </div>
+</div>
+
+{% for group_name, by_day in groups.items %}
+<div class="card">
+  <h2>Class Group: {{ group_name }}</h2>
+  <table class="timetable-grid">
+    <thead>
+      <tr>
+        <th>Time</th>
+        {% for code, name in days %}<th>{{ name }}</th>{% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for slot in slot_labels %}
+      <tr>
+        <th>{{ slot }}</th>
+        {% for code, name in days %}
+          <td>{{ by_day|default_if_none:""|get_item:code|get_item:slot|default:""|safe }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% empty %}
+<div class="card">
+  <p class="empty">No timetable generated yet. Add data, then click <a href="{% url 'generate' %}">Generate</a>.</p>
+</div>
+{% endfor %}
+{% endblock %}

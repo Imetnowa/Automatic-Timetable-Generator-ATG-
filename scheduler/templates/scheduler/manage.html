@@ -1,0 +1,104 @@
+{% extends "scheduler/base.html" %}
+{% block content %}
+
+<div class="card">
+  <h2>⏰ Time Slots</h2>
+  <form class="inline" method="post" action="{% url 'timeslot_create' %}">
+    {% csrf_token %}
+    {% for f in timeslot_form %}<div><label>{{ f.label }}</label>{{ f }}</div>{% endfor %}
+    <button type="submit">Add Time Slot</button>
+  </form>
+  <table style="margin-top:14px">
+    <thead><tr><th>Day</th><th>Start</th><th>End</th><th></th></tr></thead>
+    <tbody>
+      {% for t in timeslots %}
+      <tr><td>{{ t.get_day_display }}</td><td>{{ t.start_time|time:"H:i" }}</td><td>{{ t.end_time|time:"H:i" }}</td>
+          <td><a class="btn btn-danger" href="{% url 'timeslot_delete' t.pk %}">Delete</a></td></tr>
+      {% empty %}<tr><td colspan="4" class="empty">No time slots yet.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>🏫 Rooms</h2>
+  <form class="inline" method="post" action="{% url 'room_create' %}">
+    {% csrf_token %}
+    {% for f in room_form %}<div><label>{{ f.label }}</label>{{ f }}</div>{% endfor %}
+    <button type="submit">Add Room</button>
+  </form>
+  <table style="margin-top:14px">
+    <thead><tr><th>Name</th><th>Capacity</th><th></th></tr></thead>
+    <tbody>
+      {% for r in rooms %}
+      <tr><td>{{ r.name }}</td><td>{{ r.capacity }}</td>
+          <td><a class="btn btn-danger" href="{% url 'room_delete' r.pk %}">Delete</a></td></tr>
+      {% empty %}<tr><td colspan="3" class="empty">No rooms yet.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>👨‍🏫 Lecturers</h2>
+  <form method="post" action="{% url 'lecturer_create' %}">
+    {% csrf_token %}
+    <div><label>Name</label>{{ lecturer_form.name }}</div>
+    <div style="margin-top:8px"><label>Email</label>{{ lecturer_form.email }}</div>
+    <div style="margin-top:8px"><label>Available slots (leave blank = always available)</label>
+      {{ lecturer_form.available_slots }}</div>
+    <button style="margin-top:10px" type="submit">Add Lecturer</button>
+  </form>
+  <table style="margin-top:14px">
+    <thead><tr><th>Name</th><th>Email</th><th>Avail. Slots</th><th></th></tr></thead>
+    <tbody>
+      {% for l in lecturers %}
+      <tr><td>{{ l.name }}</td><td>{{ l.email }}</td><td>{{ l.available_slots.count }}</td>
+          <td><a class="btn btn-danger" href="{% url 'lecturer_delete' l.pk %}">Delete</a></td></tr>
+      {% empty %}<tr><td colspan="4" class="empty">No lecturers yet.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>👥 Class Groups</h2>
+  <form class="inline" method="post" action="{% url 'group_create' %}">
+    {% csrf_token %}
+    {% for f in group_form %}<div><label>{{ f.label }}</label>{{ f }}</div>{% endfor %}
+    <button type="submit">Add Group</button>
+  </form>
+  <table style="margin-top:14px">
+    <thead><tr><th>Name</th><th>Size</th><th></th></tr></thead>
+    <tbody>
+      {% for g in groups %}
+      <tr><td>{{ g.name }}</td><td>{{ g.size }}</td>
+          <td><a class="btn btn-danger" href="{% url 'group_delete' g.pk %}">Delete</a></td></tr>
+      {% empty %}<tr><td colspan="3" class="empty">No groups yet.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>📚 Courses</h2>
+  <form class="inline" method="post" action="{% url 'course_create' %}">
+    {% csrf_token %}
+    {% for f in course_form %}<div><label>{{ f.label }}</label>{{ f }}</div>{% endfor %}
+    <button type="submit">Add Course</button>
+  </form>
+  <table style="margin-top:14px">
+    <thead><tr><th>Code</th><th>Title</th><th>Lecturer</th><th>Group</th><th>Sessions/Week</th><th></th></tr></thead>
+    <tbody>
+      {% for c in courses %}
+      <tr><td>{{ c.code }}</td><td>{{ c.title }}</td><td>{{ c.lecturer }}</td>
+          <td>{{ c.class_group }}</td><td>{{ c.sessions_per_week }}</td>
+          <td><a class="btn btn-danger" href="{% url 'course_delete' c.pk %}">Delete</a></td></tr>
+      {% empty %}<tr><td colspan="6" class="empty">No courses yet.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>⚡ Generate</h2>
+  <p>When you're done adding data, generate the timetable:</p>
+  <a class="btn btn-accent" href="{% url 'generate' %}">Generate Timetable Now</a>
+</div>
+
+{% endblock %}

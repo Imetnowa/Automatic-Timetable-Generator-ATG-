@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Automatic Timetable Generator{% endblock %}</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root { --primary:#1E2761; --accent:#7DE2D1; --bg:#f6f7fb; --text:#1a1a1a; --muted:#6b7280; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+           background: var(--bg); color: var(--text); }
+    header { background: var(--primary); color: white; padding: 14px 28px;
+             display:flex; align-items:center; justify-content:space-between; }
+    header h1 { margin:0; font-size: 1.2rem; }
+    nav a { color:white; margin-left:16px; text-decoration:none; opacity:.85; }
+    nav a:hover { opacity:1; text-decoration:underline; }
+    main { max-width: 1200px; margin: 24px auto; padding: 0 24px; }
+    .card { background:white; border-radius:10px; padding:20px; margin-bottom:18px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+    h2 { margin-top:0; color: var(--primary); }
+    button, .btn { background: var(--primary); color:white; border:0; border-radius:6px;
+                   padding:8px 14px; cursor:pointer; font-size:.9rem; text-decoration:none;
+                   display:inline-block; }
+    .btn-accent { background: #028090; }
+    .btn-danger { background: #b91c1c; }
+    .btn-ghost { background: transparent; color: var(--primary); border:1px solid var(--primary); }
+    table { width:100%; border-collapse: collapse; font-size:.9rem; }
+    th, td { border:1px solid #e5e7eb; padding:8px; text-align:left; vertical-align: top; }
+    th { background:#f3f4f6; }
+    .grid { display:grid; gap:18px; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); }
+    .stat { background: linear-gradient(135deg,#1E2761,#3a4cad); color:white;
+            border-radius:10px; padding:16px; }
+    .stat .num { font-size:1.8rem; font-weight:700; }
+    .stat .lbl { opacity:.85; font-size:.85rem; }
+    .messages { list-style:none; padding:0; margin:0 0 14px 0; }
+    .messages li { padding:10px 14px; border-radius:6px; margin-bottom:8px; }
+    .messages li.success { background:#d1fae5; color:#065f46; }
+    .messages li.error,.messages li.warning { background:#fef3c7; color:#92400e; }
+    form.inline { display:flex; gap:8px; flex-wrap:wrap; align-items:end; }
+    label { font-size:.85rem; color: var(--muted); display:block; margin-bottom:4px; }
+    input, select, textarea { padding:7px 10px; border:1px solid #d1d5db; border-radius:6px;
+                              font-size:.9rem; font-family:inherit; }
+    .timetable-grid th { background: var(--primary); color:white; }
+    .timetable-grid td { min-width:140px; }
+    .empty { color: var(--muted); font-style: italic; }
+    .toolbar { display:flex; gap:10px; flex-wrap:wrap; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📅 Automatic Timetable Generator</h1>
+    <nav>
+      <a href="{% url 'dashboard' %}">Dashboard</a>
+      <a href="{% url 'manage_data' %}">Manage Data</a>
+      <a href="{% url 'timetable' %}">Timetable</a>
+      <a href="/admin/">Admin</a>
+    </nav>
+  </header>
+  <main>
+    {% if messages %}
+      <ul class="messages">
+        {% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
