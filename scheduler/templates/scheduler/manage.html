@@ -1,104 +1,436 @@
-{% extends "scheduler/base.html" %}
-{% block content %}
-
-<div class="card">
-  <h2>⏰ Time Slots</h2>
-  <form class="inline" method="post" action="{% url 'timeslot_create' %}">
-    {% csrf_token %}
-    {% for f in timeslot_form %}<div><label>{{ f.label }}</label>{{ f }}</div>{% endfor %}
-    <button type="submit">Add Time Slot</button>
-  </form>
-  <table style="margin-top:14px">
-    <thead><tr><th>Day</th><th>Start</th><th>End</th><th></th></tr></thead>
-    <tbody>
-      {% for t in timeslots %}
-      <tr><td>{{ t.get_day_display }}</td><td>{{ t.start_time|time:"H:i" }}</td><td>{{ t.end_time|time:"H:i" }}</td>
-          <td><a class="btn btn-danger" href="{% url 'timeslot_delete' t.pk %}">Delete</a></td></tr>
-      {% empty %}<tr><td colspan="4" class="empty">No time slots yet.</td></tr>{% endfor %}
-    </tbody>
-  </table>
-</div>
-
-<div class="card">
-  <h2>🏫 Rooms</h2>
-  <form class="inline" method="post" action="{% url 'room_create' %}">
-    {% csrf_token %}
-    {% for f in room_form %}<div><label>{{ f.label }}</label>{{ f }}</div>{% endfor %}
-    <button type="submit">Add Room</button>
-  </form>
-  <table style="margin-top:14px">
-    <thead><tr><th>Name</th><th>Capacity</th><th></th></tr></thead>
-    <tbody>
-      {% for r in rooms %}
-      <tr><td>{{ r.name }}</td><td>{{ r.capacity }}</td>
-          <td><a class="btn btn-danger" href="{% url 'room_delete' r.pk %}">Delete</a></td></tr>
-      {% empty %}<tr><td colspan="3" class="empty">No rooms yet.</td></tr>{% endfor %}
-    </tbody>
-  </table>
-</div>
-
-<div class="card">
-  <h2>👨‍🏫 Lecturers</h2>
-  <form method="post" action="{% url 'lecturer_create' %}">
-    {% csrf_token %}
-    <div><label>Name</label>{{ lecturer_form.name }}</div>
-    <div style="margin-top:8px"><label>Email</label>{{ lecturer_form.email }}</div>
-    <div style="margin-top:8px"><label>Available slots (leave blank = always available)</label>
-      {{ lecturer_form.available_slots }}</div>
-    <button style="margin-top:10px" type="submit">Add Lecturer</button>
-  </form>
-  <table style="margin-top:14px">
-    <thead><tr><th>Name</th><th>Email</th><th>Avail. Slots</th><th></th></tr></thead>
-    <tbody>
-      {% for l in lecturers %}
-      <tr><td>{{ l.name }}</td><td>{{ l.email }}</td><td>{{ l.available_slots.count }}</td>
-          <td><a class="btn btn-danger" href="{% url 'lecturer_delete' l.pk %}">Delete</a></td></tr>
-      {% empty %}<tr><td colspan="4" class="empty">No lecturers yet.</td></tr>{% endfor %}
-    </tbody>
-  </table>
-</div>
-
-<div class="card">
-  <h2>👥 Class Groups</h2>
-  <form class="inline" method="post" action="{% url 'group_create' %}">
-    {% csrf_token %}
-    {% for f in group_form %}<div><label>{{ f.label }}</label>{{ f }}</div>{% endfor %}
-    <button type="submit">Add Group</button>
-  </form>
-  <table style="margin-top:14px">
-    <thead><tr><th>Name</th><th>Size</th><th></th></tr></thead>
-    <tbody>
-      {% for g in groups %}
-      <tr><td>{{ g.name }}</td><td>{{ g.size }}</td>
-          <td><a class="btn btn-danger" href="{% url 'group_delete' g.pk %}">Delete</a></td></tr>
-      {% empty %}<tr><td colspan="3" class="empty">No groups yet.</td></tr>{% endfor %}
-    </tbody>
-  </table>
-</div>
-
-<div class="card">
-  <h2>📚 Courses</h2>
-  <form class="inline" method="post" action="{% url 'course_create' %}">
-    {% csrf_token %}
-    {% for f in course_form %}<div><label>{{ f.label }}</label>{{ f }}</div>{% endfor %}
-    <button type="submit">Add Course</button>
-  </form>
-  <table style="margin-top:14px">
-    <thead><tr><th>Code</th><th>Title</th><th>Lecturer</th><th>Group</th><th>Sessions/Week</th><th></th></tr></thead>
-    <tbody>
-      {% for c in courses %}
-      <tr><td>{{ c.code }}</td><td>{{ c.title }}</td><td>{{ c.lecturer }}</td>
-          <td>{{ c.class_group }}</td><td>{{ c.sessions_per_week }}</td>
-          <td><a class="btn btn-danger" href="{% url 'course_delete' c.pk %}">Delete</a></td></tr>
-      {% empty %}<tr><td colspan="6" class="empty">No courses yet.</td></tr>{% endfor %}
-    </tbody>
-  </table>
-</div>
-
-<div class="card">
-  <h2>⚡ Generate</h2>
-  <p>When you're done adding data, generate the timetable:</p>
-  <a class="btn btn-accent" href="{% url 'generate' %}">Generate Timetable Now</a>
-</div>
-
-{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Manage System Data - Automatic Timetable Generator</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          brand: { 50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8' },
+          success: '#22c55e',
+        }
+      }
+    }
+  }
+</script>
+</head>
+<body class="bg-gray-50 text-slate-900 font-sans antialiased">
+ 
+<!-- HEADER -->
+<header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+      <div class="flex items-center gap-8">
+        <div class="flex items-center gap-2 text-brand-600 font-bold text-xl">
+          <svg class="w-8 h-8" fill="currentColor" viewbox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z"></path></svg>
+          <span class="tracking-tight">Automatic Timetable Generator</span>
+        </div>
+        <nav class="hidden md:flex space-x-4 text-sm font-medium text-gray-500">
+          <a class="px-3 py-2 hover:text-brand-600 transition-colors" href="{% url 'dashboard' %}">Dashboard</a>
+          <a class="px-3 py-2 bg-brand-50 text-brand-600 rounded-md" href="{% url 'manage_data' %}">Manage Data</a>
+          <a class="px-3 py-2 hover:text-brand-600 transition-colors" href="{% url 'timetable' %}">Timetable</a>
+        </nav>
+      </div>
+      <div class="flex items-center gap-6">
+        <div class="relative hidden sm:block">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+          </span>
+          <input class="block w-64 pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm focus:ring-brand-500 focus:border-brand-500" placeholder="Quick search..." type="text"/>
+        </div>
+        <button class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+        </button>
+        <div class="flex items-center gap-3 border-l pl-6 border-gray-200">
+          <div class="text-right leading-tight">
+            <p class="text-sm font-semibold text-gray-900">Admin User</p>
+            <p class="text-xs text-gray-500">System Controller</p>
+          </div>
+          <img alt="Admin Avatar" class="h-10 w-10 rounded-full border border-gray-100" src="https://lh3.googleusercontent.com/aida/ADBb0uj-OJR9ihn6EHArJEFPSm_exYBsKZw0nKOCctpa6fEftBrpNGg-I84GAXpOID04j_M6lqhIgGqqolUq9UBzolLS-B_vx90xbxb60lAKLFgzr73bkmtt-mS5Pdnuo1AcGeXaGjx62LE9jcxVHQm166rxOFo9SKiCCROVaxlJJde_RJGwvi66Me3tGliOEb0AlOt-zQJ5DExWhnOaqq8ee_heU_wJTZN7ltJD-YNOeBLZ3F7CDsmfRDPvNzRtb5jl70Mm0YE-UWCT"/>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+ 
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+ 
+  <!-- PAGE INTRO -->
+  <section class="flex flex-col md:flex-row justify-between items-start gap-6">
+    <div class="max-w-2xl">
+      <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Manage System Data</h1>
+      <p class="mt-2 text-gray-500">Configure the fundamental building blocks for your automated schedule — time slots, rooms, lecturers, class groups, and courses.</p>
+    </div>
+    <div class="flex flex-col sm:flex-row gap-3">
+      <button class="inline-flex items-center px-5 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+        Bulk Import
+      </button>
+      <a href="{% url 'timetable' %}" class="inline-flex items-center px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+        View Timetable
+      </a>
+      <a href="{% url 'generate' %}" class="inline-flex items-center px-5 py-2.5 bg-brand-600 text-white font-semibold rounded-lg hover:bg-brand-700 transition shadow-sm">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+        Generate Timetable
+      </a>
+    </div>
+  </section>
+ 
+  <!-- JUMP PILLS -->
+  <div class="flex flex-wrap gap-2 text-sm font-medium">
+    <a href="#timeslots" class="px-4 py-1.5 bg-white border border-gray-200 rounded-full text-gray-600 hover:border-brand-500 hover:text-brand-600 transition shadow-sm">⏰ Time Slots</a>
+    <a href="#rooms"     class="px-4 py-1.5 bg-white border border-gray-200 rounded-full text-gray-600 hover:border-brand-500 hover:text-brand-600 transition shadow-sm">🏫 Rooms</a>
+    <a href="#lecturers" class="px-4 py-1.5 bg-white border border-gray-200 rounded-full text-gray-600 hover:border-brand-500 hover:text-brand-600 transition shadow-sm">👨‍🏫 Lecturers</a>
+    <a href="#groups"    class="px-4 py-1.5 bg-white border border-gray-200 rounded-full text-gray-600 hover:border-brand-500 hover:text-brand-600 transition shadow-sm">👥 Class Groups</a>
+    <a href="#courses"   class="px-4 py-1.5 bg-white border border-gray-200 rounded-full text-gray-600 hover:border-brand-500 hover:text-brand-600 transition shadow-sm">📚 Courses</a>
+  </div>
+ 
+  <!-- TIME SLOTS -->
+  <section id="timeslots" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+      <div class="p-2 bg-blue-50 text-brand-600 rounded">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+      </div>
+      <div>
+        <h2 class="font-bold text-gray-900">Time Slots</h2>
+        <p class="text-xs text-gray-500">Define valid teaching windows and daily schedules.</p>
+      </div>
+    </div>
+    <div class="p-6">
+      <form method="post" action="{% url 'timeslot_create' %}">
+        {% csrf_token %}
+        <div class="grid grid-cols-12 gap-4 mb-6 items-end">
+          {% for f in timeslot_form %}
+          <div class="col-span-3">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">{{ f.label }}</label>
+            {{ f }}
+          </div>
+          {% endfor %}
+          <div class="col-span-3">
+            <button type="submit" class="w-full py-2.5 bg-brand-600 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:bg-brand-700 transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+              Add Time Slot
+            </button>
+          </div>
+        </div>
+      </form>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100 text-xs text-gray-400 font-bold uppercase tracking-wider">
+              <th class="pb-3 px-4 text-left">Day</th>
+              <th class="pb-3 px-4 text-left">Start</th>
+              <th class="pb-3 px-4 text-left">End</th>
+              <th class="pb-3 px-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in timeslots %}
+            <tr class="border-b border-gray-50 hover:bg-gray-50 group">
+              <td class="py-3.5 px-4 font-semibold text-gray-800">{{ t.get_day_display }}</td>
+              <td class="py-3.5 px-4 text-gray-600">{{ t.start_time|time:"H:i" }}</td>
+              <td class="py-3.5 px-4 text-gray-600">{{ t.end_time|time:"H:i" }}</td>
+              <td class="py-3.5 px-4 text-right">
+                <a href="{% url 'timeslot_delete' t.pk %}" class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold text-red-500 border border-red-100 rounded-lg hover:bg-red-50 transition opacity-0 group-hover:opacity-100">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                  Delete
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="py-10 text-center text-gray-400 text-sm">No time slots yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- ROOMS -->
+  <section id="rooms" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+      <div class="p-2 bg-blue-50 text-brand-600 rounded">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+      </div>
+      <div>
+        <h2 class="font-bold text-gray-900">Rooms &amp; Facilities</h2>
+        <p class="text-xs text-gray-500">Manage campus spaces and their capacities.</p>
+      </div>
+    </div>
+    <div class="p-6">
+      <form method="post" action="{% url 'room_create' %}">
+        {% csrf_token %}
+        <div class="grid grid-cols-12 gap-4 mb-6 items-end">
+          {% for f in room_form %}
+          <div class="col-span-4">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">{{ f.label }}</label>
+            {{ f }}
+          </div>
+          {% endfor %}
+          <div class="col-span-4">
+            <button type="submit" class="w-full py-2.5 bg-brand-600 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:bg-brand-700 transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+              Add Room
+            </button>
+          </div>
+        </div>
+      </form>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-100 text-xs text-gray-400 font-bold uppercase tracking-wider">
+            <th class="pb-3 px-4 text-left">Name</th>
+            <th class="pb-3 px-4 text-left">Capacity</th>
+            <th class="pb-3 px-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rooms %}
+          <tr class="border-b border-gray-50 hover:bg-gray-50 group">
+            <td class="py-3.5 px-4 font-semibold text-gray-800">{{ r.name }}</td>
+            <td class="py-3.5 px-4 text-gray-600">{{ r.capacity }} seats</td>
+            <td class="py-3.5 px-4 text-right">
+              <a href="{% url 'room_delete' r.pk %}" class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold text-red-500 border border-red-100 rounded-lg hover:bg-red-50 transition opacity-0 group-hover:opacity-100">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                Delete
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" class="py-10 text-center text-gray-400 text-sm">No rooms yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+ 
+  <!-- LECTURERS -->
+  <section id="lecturers" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+      <div class="p-2 bg-blue-50 text-brand-600 rounded">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+      </div>
+      <div>
+        <h2 class="font-bold text-gray-900">Lecturers &amp; Faculty</h2>
+        <p class="text-xs text-gray-500">Register staff and manage availability constraints.</p>
+      </div>
+    </div>
+    <div class="p-6">
+      <form method="post" action="{% url 'lecturer_create' %}">
+        {% csrf_token %}
+        <div class="grid grid-cols-12 gap-4 mb-2 items-end">
+          <div class="col-span-4">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Name</label>
+            {{ lecturer_form.name }}
+          </div>
+          <div class="col-span-4">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Email</label>
+            {{ lecturer_form.email }}
+          </div>
+          <div class="col-span-4">
+            <button type="submit" class="w-full py-2.5 bg-brand-600 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:bg-brand-700 transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+              Add Lecturer
+            </button>
+          </div>
+        </div>
+        <div class="mb-6 pb-6 border-b border-gray-100">
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Available Slots <span class="normal-case font-normal text-gray-400">(leave blank = always available)</span></label>
+          {{ lecturer_form.available_slots }}
+        </div>
+      </form>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for l in lecturers %}
+        <div class="p-5 border border-gray-100 rounded-xl hover:shadow-md transition-shadow group">
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <h3 class="font-bold text-gray-900">{{ l.name }}</h3>
+              <p class="text-xs text-gray-400">{{ l.email }}</p>
+            </div>
+            <span class="px-2 py-0.5 bg-green-50 text-green-600 text-[10px] font-bold uppercase rounded-full border border-green-100">Active</span>
+          </div>
+          <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-50">
+            <span class="text-xs text-gray-500">{{ l.available_slots.count }} available slots</span>
+            <a href="{% url 'lecturer_delete' l.pk %}" class="text-xs font-bold text-red-400 hover:text-red-600 transition opacity-0 group-hover:opacity-100">Delete</a>
+          </div>
+        </div>
+        {% empty %}
+        <div class="col-span-3 py-10 text-center text-gray-400 text-sm">No lecturers yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+ 
+  <!-- CLASS GROUPS -->
+  <section id="groups" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+      <div class="p-2 bg-blue-50 text-brand-600 rounded">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+      </div>
+      <div>
+        <h2 class="font-bold text-gray-900">Class Groups</h2>
+        <p class="text-xs text-gray-500">Student cohorts that share a weekly schedule.</p>
+      </div>
+    </div>
+    <div class="p-6">
+      <form method="post" action="{% url 'group_create' %}" class="mb-6">
+        {% csrf_token %}
+        <div class="grid grid-cols-12 gap-4 items-end">
+          {% for f in group_form %}
+          <div class="col-span-4">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">{{ f.label }}</label>
+            {{ f }}
+          </div>
+          {% endfor %}
+          <div class="col-span-4">
+            <button type="submit" class="w-full py-2.5 bg-brand-600 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:bg-brand-700 transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+              Add Group
+            </button>
+          </div>
+        </div>
+      </form>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-100 text-xs text-gray-400 font-bold uppercase tracking-wider">
+            <th class="pb-3 px-4 text-left">Name</th>
+            <th class="pb-3 px-4 text-left">Size</th>
+            <th class="pb-3 px-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for g in groups %}
+          <tr class="border-b border-gray-50 hover:bg-gray-50 group">
+            <td class="py-3.5 px-4 font-semibold text-gray-800">{{ g.name }}</td>
+            <td class="py-3.5 px-4 text-gray-600">{{ g.size }} students</td>
+            <td class="py-3.5 px-4 text-right">
+              <a href="{% url 'group_delete' g.pk %}" class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold text-red-500 border border-red-100 rounded-lg hover:bg-red-50 transition opacity-0 group-hover:opacity-100">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                Delete
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" class="py-10 text-center text-gray-400 text-sm">No class groups yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+ 
+  <!-- COURSES -->
+  <section id="courses" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+      <div class="p-2 bg-blue-50 text-brand-600 rounded">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+      </div>
+      <div>
+        <h2 class="font-bold text-gray-900">Academic Courses</h2>
+        <p class="text-xs text-gray-500">Link curriculum modules to lecturers and class groups.</p>
+      </div>
+    </div>
+    <div class="p-6">
+      <form method="post" action="{% url 'course_create' %}" class="mb-6 pb-6 border-b border-gray-100">
+        {% csrf_token %}
+        <div class="grid grid-cols-12 gap-4 items-end">
+          {% for f in course_form %}
+          <div class="col-span-2">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">{{ f.label }}</label>
+            {{ f }}
+          </div>
+          {% endfor %}
+          <div class="col-span-2">
+            <button type="submit" class="w-full py-2.5 bg-brand-600 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:bg-brand-700 transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+              Add
+            </button>
+          </div>
+        </div>
+      </form>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-100 text-xs text-gray-400 font-bold uppercase tracking-wider">
+            <th class="pb-3 px-4 text-left">Code</th>
+            <th class="pb-3 px-4 text-left">Title</th>
+            <th class="pb-3 px-4 text-left">Lecturer</th>
+            <th class="pb-3 px-4 text-left">Group</th>
+            <th class="pb-3 px-4 text-center">Sessions/Wk</th>
+            <th class="pb-3 px-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in courses %}
+          <tr class="border-b border-gray-50 hover:bg-gray-50 group">
+            <td class="py-3.5 px-4 font-bold text-brand-600">{{ c.code }}</td>
+            <td class="py-3.5 px-4 font-medium text-gray-800">{{ c.title }}</td>
+            <td class="py-3.5 px-4 text-gray-600">{{ c.lecturer }}</td>
+            <td class="py-3.5 px-4 text-gray-600">{{ c.class_group }}</td>
+            <td class="py-3.5 px-4 text-center">
+              <span class="px-2.5 py-0.5 bg-brand-50 text-brand-600 text-xs font-bold rounded-full">{{ c.sessions_per_week }}</span>
+            </td>
+            <td class="py-3.5 px-4 text-right">
+              <a href="{% url 'course_delete' c.pk %}" class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold text-red-500 border border-red-100 rounded-lg hover:bg-red-50 transition opacity-0 group-hover:opacity-100">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                Delete
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="py-10 text-center text-gray-400 text-sm">No courses yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+ 
+  <!-- GENERATE CTA -->
+  <section class="bg-brand-600 rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg">
+    <div class="flex items-center gap-5">
+      <div class="w-14 h-14 bg-white/20 text-white rounded-2xl flex items-center justify-center shrink-0">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+      </div>
+      <div>
+        <h2 class="text-xl font-extrabold text-white">Ready to Generate?</h2>
+        <p class="text-brand-100 text-sm mt-1">All input data is validated. Execute the solver to produce your conflict-free weekly timetable.</p>
+      </div>
+    </div>
+    <div class="flex gap-3 shrink-0">
+      <a href="{% url 'generate' %}" class="px-8 py-3 bg-white text-brand-600 font-bold rounded-xl hover:bg-brand-50 transition-all flex items-center gap-2 shadow-sm">
+        Execute Generation
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+      </a>
+      <a href="{% url 'export_csv' %}" class="px-6 py-3 bg-white/10 border border-white/20 text-white font-bold rounded-xl hover:bg-white/20 transition-colors">
+        Export CSV
+      </a>
+    </div>
+  </section>
+ 
+</main>
+ 
+<!-- FOOTER -->
+<footer class="bg-white border-t border-gray-200 py-8 mt-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+      <div class="flex flex-col gap-1 items-center md:items-start">
+        <div class="flex items-center gap-2 text-brand-600 font-bold">
+          <svg class="w-5 h-5" fill="currentColor" viewbox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z"></path></svg>
+          <span class="text-sm">Automatic Timetable Generator</span>
+        </div>
+        <p class="text-[10px] text-gray-400">v2.4.0 • Enterprise Edition</p>
+      </div>
+      <nav class="flex gap-6 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+        <a class="hover:text-brand-600" href="#">Help Center</a>
+        <a class="hover:text-brand-600" href="#">Accessibility Statement</a>
+        <a class="hover:text-brand-600" href="#">Terms of Service</a>
+        <a class="hover:text-brand-600" href="#">Privacy Policy</a>
+      </nav>
+      <p class="text-xs text-gray-400">© 2026 ATG Systems. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+ 
+</body></html>

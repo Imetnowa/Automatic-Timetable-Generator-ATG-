@@ -1,25 +1,361 @@
-{% extends "scheduler/base.html" %}
-{% block content %}
-<div class="card">
-  <h2>Overview</h2>
-  <p>Welcome to the Automatic Timetable Generator. Use this tool to manage academic
-     resources and produce a conflict-free weekly schedule.</p>
-  <div class="grid">
-    <div class="stat"><div class="num">{{ counts.courses }}</div><div class="lbl">Courses</div></div>
-    <div class="stat"><div class="num">{{ counts.lecturers }}</div><div class="lbl">Lecturers</div></div>
-    <div class="stat"><div class="num">{{ counts.groups }}</div><div class="lbl">Class Groups</div></div>
-    <div class="stat"><div class="num">{{ counts.rooms }}</div><div class="lbl">Rooms</div></div>
-    <div class="stat"><div class="num">{{ counts.timeslots }}</div><div class="lbl">Time Slots</div></div>
-    <div class="stat"><div class="num">{{ counts.scheduled }}</div><div class="lbl">Scheduled Sessions</div></div>
-  </div>
-</div>
+<!DOCTYPE html>
 
-<div class="card">
-  <h2>Quick Actions</h2>
-  <div class="toolbar">
-    <a class="btn" href="{% url 'manage_data' %}">Manage Data</a>
-    <a class="btn btn-accent" href="{% url 'generate' %}">⚡ Generate Timetable</a>
-    <a class="btn btn-ghost" href="{% url 'timetable' %}">View Timetable</a>
-  </div>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dashboard Overview - Automatic Timetable Generator</title>
+<!-- Tailwind CSS v3 CDN with plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Custom Tailwind Config -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            },
+            success: '#22c55e',
+          },
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-50 text-slate-900 font-sans antialiased">
+<!-- BEGIN: MainHeader -->
+<header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-16">
+<!-- Logo and Nav -->
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-2 text-brand-600 font-bold text-xl" data-purpose="logo">
+<svg class="w-8 h-8" fill="currentColor" viewbox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z"></path></svg>
+<span class="tracking-tight">Automatic Timetable Generator</span>
 </div>
-{% endblock %}
+<nav class="hidden md:flex space-x-4 text-sm font-medium text-gray-500">
+<a class="px-3 py-2 bg-brand-50 text-brand-600 rounded-md" href="{% url 'dashboard' %}">Dashboard</a>
+<a class="px-3 py-2 hover:text-brand-600 transition-colors" href="{% url 'manage_data' %}">Manage Data</a>
+<a class="px-3 py-2 hover:text-brand-600 transition-colors" href="{% url 'timetable' %}">Timetable</a>
+</nav>
+</div>
+<!-- Search and User -->
+<div class="flex items-center gap-6">
+<div class="relative hidden sm:block" data-purpose="search-bar">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</span>
+<input class="block w-64 pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm focus:ring-brand-500 focus:border-brand-500" placeholder="Quick search..." type="text"/>
+</div>
+<button class="text-gray-400 hover:text-gray-600">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+<div class="flex items-center gap-3 border-l pl-6 border-gray-200" data-purpose="user-profile">
+<div class="text-right leading-tight">
+<p class="text-sm font-semibold text-gray-900">Admin User</p>
+<p class="text-xs text-gray-500">System Controller</p>
+</div>
+<img alt="Admin Avatar" class="h-10 w-10 rounded-full border border-gray-100" src="https://lh3.googleusercontent.com/aida/ADBb0uj-OJR9ihn6EHArJEFPSm_exYBsKZw0nKOCctpa6fEftBrpNGg-I84GAXpOID04j_M6lqhIgGqqolUq9UBzolLS-B_vx90xbxb60lAKLFgzr73bkmtt-mS5Pdnuo1AcGeXaGjx62LE9jcxVHQm166rxOFo9SKiCCROVaxlJJde_RJGwvi66Me3tGliOEb0AlOt-zQJ5DExWhnOaqq8ee_heU_wJTZN7ltJD-YNOeBLZ3F7CDsmfRDPvNzRtb5jl70Mm0YE-UWCT"/>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- END: MainHeader -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+<!-- BEGIN: DashboardIntro -->
+<section class="flex flex-col md:flex-row justify-between items-start gap-6">
+<div class="max-w-2xl">
+<h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Dashboard Overview</h1>
+<p class="mt-2 text-gray-500">Monitor your scheduling ecosystem and trigger new conflict-free generation runs. Manage institutional data and review final generated weekly timetables.</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-3">
+<a href="{% url 'generate' %}" class="inline-flex items-center px-5 py-2.5 bg-brand-600 text-white font-semibold rounded-lg hover:bg-brand-700 transition shadow-sm">
+<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+          Generate Timetable
+        </a>
+<a href="{% url 'manage_data' %}" class="inline-flex items-center px-5 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition">
+<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+          Manage Data
+        </a>
+<a href="{% url 'timetable' %}" class="inline-flex items-center px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition">
+<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+          View Current
+        </a>
+</div>
+</section>
+<!-- END: DashboardIntro -->
+<!-- BEGIN: QuickStats -->
+<section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+<!-- Lecturers -->
+<div class="bg-white p-5 rounded-xl border border-gray-200 flex flex-col items-center text-center">
+<div class="w-12 h-12 bg-blue-50 text-brand-500 rounded-lg flex items-center justify-center mb-3">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Lecturers</p>
+<p class="text-2xl font-bold text-gray-900">{{ counts.lecturers }}</p>
+<p class="text-[10px] text-gray-500">Active teaching staff</p>
+</div>
+<!-- Rooms -->
+<div class="bg-white p-5 rounded-xl border border-gray-200 flex flex-col items-center text-center">
+<div class="w-12 h-12 bg-blue-50 text-brand-500 rounded-lg flex items-center justify-center mb-3">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Rooms</p>
+<p class="text-2xl font-bold text-gray-900">{{ counts.rooms }}</p>
+<p class="text-[10px] text-gray-500">Lecture &amp; Lab capacity</p>
+</div>
+<!-- Courses -->
+<div class="bg-white p-5 rounded-xl border border-gray-200 flex flex-col items-center text-center">
+<div class="w-12 h-12 bg-blue-50 text-brand-500 rounded-lg flex items-center justify-center mb-3">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Courses</p>
+<p class="text-2xl font-bold text-gray-900">{{ counts.courses }}</p>
+<p class="text-[10px] text-gray-500">Total active modules</p>
+</div>
+<!-- Class Groups -->
+<div class="bg-white p-5 rounded-xl border border-gray-200 flex flex-col items-center text-center">
+<div class="w-12 h-12 bg-blue-50 text-brand-500 rounded-lg flex items-center justify-center mb-3">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Class Groups</p>
+<p class="text-2xl font-bold text-gray-900">{{ counts.groups }}</p>
+<p class="text-[10px] text-gray-500">Student cohorts</p>
+</div>
+<!-- Time Slots -->
+<div class="bg-white p-5 rounded-xl border border-gray-200 flex flex-col items-center text-center">
+<div class="w-12 h-12 bg-blue-50 text-brand-500 rounded-lg flex items-center justify-center mb-3">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Time Slots</p>
+<p class="text-2xl font-bold text-gray-900">{{ counts.timeslots }}</p>
+<p class="text-[10px] text-gray-500">Weekly available slots</p>
+</div>
+<!-- Sessions -->
+<div class="bg-white p-5 rounded-xl border border-gray-200 flex flex-col items-center text-center">
+<div class="w-12 h-12 bg-blue-50 text-brand-500 rounded-lg flex items-center justify-center mb-3">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Sessions</p>
+<p class="text-2xl font-bold text-gray-900">{{ counts.scheduled }}</p>
+<p class="text-[10px] text-gray-500">Scheduled per week</p>
+</div>
+</section>
+<!-- END: QuickStats -->
+<!-- BEGIN: MainContentRow -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- BEGIN: LastGeneratedCard -->
+<div class="lg:col-span-2 bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm flex flex-col">
+<!-- Header -->
+<div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-blue-50 text-brand-600 rounded">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<div>
+<h3 class="font-bold text-gray-900">Last Generated Timetable</h3>
+<p class="text-xs text-gray-500">Performance summary for the latest successful scheduling run</p>
+</div>
+</div>
+<span class="px-3 py-1 bg-green-500 text-white text-[10px] font-bold uppercase rounded-full tracking-wider">Status: Success</span>
+</div>
+<!-- Body Content -->
+<div class="p-8 flex-grow grid grid-cols-1 md:grid-cols-5 gap-8">
+<!-- Left: Result Badge -->
+<div class="md:col-span-2 bg-blue-50 rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+<div class="w-14 h-14 bg-white text-brand-500 rounded-full flex items-center justify-center mb-4 shadow-sm border border-brand-100">
+<svg class="w-8 h-8" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<p class="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-1">Target Term</p>
+<h4 class="text-2xl font-black text-slate-800">Fall Semester 2024</h4>
+<div class="mt-6 w-full space-y-3">
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm text-left">
+<p class="text-[9px] font-bold text-gray-400 uppercase">Conflicts</p>
+<p class="text-lg font-bold text-green-500">0</p>
+</div>
+<div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm text-left">
+<p class="text-[9px] font-bold text-gray-400 uppercase">Time to Solve</p>
+<p class="text-lg font-bold text-gray-800">42s</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm text-left">
+<p class="text-[9px] font-bold text-gray-400 uppercase">Coverage</p>
+<p class="text-lg font-bold text-gray-800">100%</p>
+</div>
+<div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm text-left">
+<p class="text-[9px] font-bold text-gray-400 uppercase">Run ID</p>
+<p class="text-lg font-bold text-gray-800">#ATG-204</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right: Tips and Actions -->
+<div class="md:col-span-3 space-y-6">
+<div class="flex gap-4">
+<div class="shrink-0 w-10 h-10 bg-brand-50 text-brand-600 rounded-full flex items-center justify-center">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<div>
+<h4 class="font-bold text-brand-600 text-sm">Optimization Tips</h4>
+<p class="text-xs text-gray-500 mt-1 leading-relaxed">3 lecturers have tightly packed schedules. Consider increasing the 'Buffer Time' constraint for better staff satisfaction in the next run.</p>
+</div>
+</div>
+<div class="space-y-2">
+<button class="w-full flex items-center justify-between px-4 py-3 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                Review Conflict Logs
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+<button class="w-full flex items-center justify-between px-4 py-3 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                Full Audit Report
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<div class="px-8 py-5 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+<p class="text-xs text-gray-500 font-medium">Generated: <span class="text-gray-800">Today at 10:45 AM</span></p>
+<a href="{% url 'export_csv' %}" class="px-6 py-2.5 bg-slate-800 text-white text-xs font-bold rounded-lg flex items-center gap-2 hover:bg-slate-900 transition">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            Download Export
+          </a>
+</div>
+</div>
+<!-- END: LastGeneratedCard -->
+<!-- BEGIN: SystemActivity -->
+<aside class="bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col h-full">
+<div class="px-6 py-5 border-b border-gray-100">
+<h3 class="font-bold text-gray-900">System Activity</h3>
+<p class="text-xs text-gray-500">Real-time log of data modifications</p>
+</div>
+<div class="p-6 flex-grow">
+<ul class="space-y-6">
+<li class="flex gap-4 relative">
+<div class="absolute left-1 top-8 bottom-0 w-0.5 bg-gray-100"></div>
+<div class="w-2.5 h-2.5 rounded-full bg-blue-500 ring-4 ring-blue-50 mt-1.5 shrink-0"></div>
+<div>
+<p class="text-sm text-gray-800"><span class="font-bold">Admin</span> Updated Room R-102 capacity</p>
+<p class="text-[10px] font-bold text-gray-400 mt-0.5">12m ago</p>
+</div>
+</li>
+<li class="flex gap-4 relative">
+<div class="absolute left-1 top-8 bottom-0 w-0.5 bg-gray-100"></div>
+<div class="w-2.5 h-2.5 rounded-full bg-green-500 ring-4 ring-green-50 mt-1.5 shrink-0"></div>
+<div>
+<p class="text-sm text-gray-800"><span class="font-bold">Sarah L.</span> Added 4 new Courses</p>
+<p class="text-[10px] font-bold text-gray-400 mt-0.5">2h ago</p>
+</div>
+</li>
+<li class="flex gap-4 relative">
+<div class="absolute left-1 top-8 bottom-0 w-0.5 bg-gray-100"></div>
+<div class="w-2.5 h-2.5 rounded-full bg-slate-800 ring-4 ring-gray-100 mt-1.5 shrink-0"></div>
+<div>
+<p class="text-sm text-gray-800"><span class="font-bold">System</span> Automatic Backup Complete</p>
+<p class="text-[10px] font-bold text-gray-400 mt-0.5">5h ago</p>
+</div>
+</li>
+<li class="flex gap-4">
+<div class="w-2.5 h-2.5 rounded-full bg-red-500 ring-4 ring-red-50 mt-1.5 shrink-0"></div>
+<div>
+<p class="text-sm text-gray-800"><span class="font-bold">Admin</span> Deleted obsolete Session #99</p>
+<p class="text-[10px] font-bold text-gray-400 mt-0.5">1d ago</p>
+</div>
+</li>
+</ul>
+</div>
+<div class="p-6 border-t border-gray-100 text-center">
+<a class="text-brand-600 font-bold text-xs flex items-center justify-center gap-1 hover:underline" href="#">
+            View Full Activity Log
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M13 7l5 5m0 0l-5 5m5-5H6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</a>
+</div>
+</aside>
+<!-- END: SystemActivity -->
+</div>
+<!-- END: MainContentRow -->
+<!-- BEGIN: GuidedWorkflows -->
+<section class="space-y-6">
+<div class="border-b border-gray-200 pb-4">
+<h2 class="text-2xl font-bold text-gray-900">Guided Workflows</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Step 1 -->
+<div class="bg-white p-8 rounded-2xl border border-gray-200 relative group hover:border-brand-500 transition-colors">
+<span class="absolute top-8 right-8 text-[10px] font-black text-gray-300 uppercase tracking-widest">Step 1</span>
+<div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center mb-6">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h4 class="text-xl font-bold text-gray-900 mb-3">Manage Data</h4>
+<p class="text-sm text-gray-500 leading-relaxed mb-8">Input and maintain core entities like Lecturers, Rooms, and Courses. Ensure all foundational data is current before generation.</p>
+<div class="pt-6 border-t border-gray-50 flex items-center justify-between">
+<a class="text-brand-600 font-bold text-sm flex items-center gap-1 hover:gap-2 transition-all" href="{% url 'manage_data' %}">
+              Configure Now <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</a>
+<span class="px-2.5 py-1 bg-green-50 text-green-600 text-[10px] font-bold rounded-full border border-green-100 flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Ready
+            </span>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="bg-white p-8 rounded-2xl border border-gray-200 relative group hover:border-brand-500 transition-colors">
+<span class="absolute top-8 right-8 text-[10px] font-black text-gray-300 uppercase tracking-widest">Step 2</span>
+<div class="w-12 h-12 bg-blue-50 text-brand-500 rounded-xl flex items-center justify-center mb-6">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h4 class="text-xl font-bold text-gray-900 mb-3">Review Constraints</h4>
+<p class="text-sm text-gray-500 leading-relaxed mb-8">Set specific rules for time slots, room preferences, and lecturer availability. These constraints guide the solver.</p>
+<div class="pt-6 border-t border-gray-50">
+<a class="text-brand-600 font-bold text-sm flex items-center gap-1 hover:gap-2 transition-all" href="{% url 'manage_data' %}">
+              Configure Now <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</a>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="bg-white p-8 rounded-2xl border border-gray-200 relative group hover:border-brand-500 transition-colors">
+<span class="absolute top-8 right-8 text-[10px] font-black text-gray-300 uppercase tracking-widest">Step 3</span>
+<div class="w-12 h-12 bg-blue-50 text-brand-500 rounded-xl flex items-center justify-center mb-6">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-7.714 2.143L11 21l-2.286-6.857L1 12l7.714-2.143L11 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h4 class="text-xl font-bold text-gray-900 mb-3">Generate &amp; Export</h4>
+<p class="text-sm text-gray-500 leading-relaxed mb-8">Execute the solver to produce the conflict-free schedule. Review the visual grid and export for distribution.</p>
+<div class="pt-6 border-t border-gray-50">
+<a class="text-brand-600 font-bold text-sm flex items-center gap-1 hover:gap-2 transition-all" href="{% url 'generate' %}">
+              Configure Now <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</a>
+</div>
+</div>
+</div>
+</section>
+<!-- END: GuidedWorkflows -->
+</main>
+<!-- BEGIN: Footer -->
+<footer class="bg-white border-t border-gray-200 py-8 mt-12">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="flex flex-col gap-1 items-center md:items-start">
+<div class="flex items-center gap-2 text-brand-600 font-bold">
+<svg class="w-5 h-5" fill="currentColor" viewbox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z"></path></svg>
+<span class="text-sm">Automatic Timetable Generator</span>
+</div>
+<p class="text-[10px] text-gray-400">v2.4.0 • Enterprise Edition</p>
+</div>
+<nav class="flex gap-6 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+<a class="hover:text-brand-600" href="#">Help Center</a>
+<a class="hover:text-brand-600" href="#">Accessibility Statement</a>
+<a class="hover:text-brand-600" href="#">Terms of Service</a>
+<a class="hover:text-brand-600" href="#">Privacy Policy</a>
+</nav>
+<p class="text-xs text-gray-400">© 2024 ATG Systems. All rights reserved.</p>
+</div>
+</div>
+</footer>
+<!-- END: Footer -->
+</body></html>
