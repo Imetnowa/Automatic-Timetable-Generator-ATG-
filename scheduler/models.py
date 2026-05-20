@@ -53,6 +53,7 @@ class ClassGroup(models.Model):
     name = models.CharField(max_length=64, unique=True,
                             help_text="e.g. 'BIT Year 2', 'BCE Year 1'")
     size = models.PositiveIntegerField(default=30)
+    mess_window = models.CharField(max_length=20, blank=True, default="")
 
     class Meta:
         ordering = ['name']
@@ -72,6 +73,9 @@ class Course(models.Model):
         default=2,
         help_text="Number of weekly sessions to schedule for this course.",
     )
+    credit_hours = models.PositiveIntegerField(default=3)
+    contact_hours = models.PositiveIntegerField(default=3)
+    blocked_days = models.CharField(max_length=20, blank=True, default="")
 
     class Meta:
         ordering = ['code']
