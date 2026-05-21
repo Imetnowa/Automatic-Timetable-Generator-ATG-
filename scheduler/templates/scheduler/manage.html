@@ -1,64 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Manage System Data - Automatic Timetable Generator</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          brand: { 50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8' },
-          success: '#22c55e',
-        }
-      }
-    }
-  }
-</script>
-</head>
-<body class="bg-gray-50 text-slate-900 font-sans antialiased">
- 
-<!-- HEADER -->
-<header class="bg-white border-b border-gray-200 sticky top-0 z-50">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between items-center h-16">
-      <div class="flex items-center gap-8">
-        <div class="flex items-center gap-2 text-brand-600 font-bold text-xl">
-          <svg class="w-8 h-8" fill="currentColor" viewbox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z"></path></svg>
-          <span class="tracking-tight">Automatic Timetable Generator</span>
-        </div>
-        <nav class="hidden md:flex space-x-4 text-sm font-medium text-gray-500">
-          <a class="px-3 py-2 hover:text-brand-600 transition-colors" href="{% url 'dashboard' %}">Dashboard</a>
-          <a class="px-3 py-2 bg-brand-50 text-brand-600 rounded-md" href="{% url 'manage_data' %}">Manage Data</a>
-          <a class="px-3 py-2 hover:text-brand-600 transition-colors" href="{% url 'timetable' %}">Timetable</a>
-        </nav>
-      </div>
-      <div class="flex items-center gap-6">
-        <div class="relative hidden sm:block">
-          <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-          </span>
-          <input class="block w-64 pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm focus:ring-brand-500 focus:border-brand-500" placeholder="Quick search..." type="text"/>
-        </div>
-        <button class="text-gray-400 hover:text-gray-600">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-        </button>
-        <div class="flex items-center gap-3 border-l pl-6 border-gray-200">
-          <div class="text-right leading-tight">
-            <p class="text-sm font-semibold text-gray-900">Admin User</p>
-            <p class="text-xs text-gray-500">System Controller</p>
-          </div>
-          <img alt="Admin Avatar" class="h-10 w-10 rounded-full border border-gray-100" src="https://lh3.googleusercontent.com/aida/ADBb0uj-OJR9ihn6EHArJEFPSm_exYBsKZw0nKOCctpa6fEftBrpNGg-I84GAXpOID04j_M6lqhIgGqqolUq9UBzolLS-B_vx90xbxb60lAKLFgzr73bkmtt-mS5Pdnuo1AcGeXaGjx62LE9jcxVHQm166rxOFo9SKiCCROVaxlJJde_RJGwvi66Me3tGliOEb0AlOt-zQJ5DExWhnOaqq8ee_heU_wJTZN7ltJD-YNOeBLZ3F7CDsmfRDPvNzRtb5jl70Mm0YE-UWCT"/>
-        </div>
-      </div>
-    </div>
-  </div>
-</header>
- 
+{% extends "scheduler/base.html" %}
+{% block nav_manage %}bg-brand-50 text-brand-600{% endblock %}
+{% block content %}
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
- 
   <!-- PAGE INTRO -->
   <section class="flex flex-col md:flex-row justify-between items-start gap-6">
     <div class="max-w-2xl">
@@ -66,14 +9,6 @@
       <p class="mt-2 text-gray-500">Configure the fundamental building blocks for your automated schedule — time slots, rooms, lecturers, class groups, and courses.</p>
     </div>
     <div class="flex flex-col sm:flex-row gap-3">
-      <button class="inline-flex items-center px-5 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-        Bulk Import
-      </button>
-      <a href="{% url 'timetable' %}" class="inline-flex items-center px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-        View Timetable
-      </a>
       <a href="{% url 'generate' %}" class="inline-flex items-center px-5 py-2.5 bg-brand-600 text-white font-semibold rounded-lg hover:bg-brand-700 transition shadow-sm">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
         Generate Timetable
@@ -334,19 +269,33 @@
       </div>
     </div>
     <div class="p-6">
-      <form method="post" action="{% url 'course_create' %}" class="mb-6 pb-6 border-b border-gray-100">
+       <form method="post" action="{% url 'course_create' %}" class="mb-6 pb-6 border-b border-gray-100">
         {% csrf_token %}
-        <div class="grid grid-cols-12 gap-4 items-end">
-          {% for f in course_form %}
-          <div class="col-span-2">
-            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">{{ f.label }}</label>
-            {{ f }}
+        <div class="grid grid-cols-12 gap-2 items-end">
+          <div class="col-span-3">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">{{ course_form.code.label }}</label>
+            {{ course_form.code }}
           </div>
-          {% endfor %}
+          <div class="col-span-3">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">{{ course_form.title.label }}</label>
+            {{ course_form.title }}
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">{{ course_form.lecturer.label }}</label>
+            {{ course_form.lecturer }}
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">{{ course_form.class_group.label }}</label>
+            {{ course_form.class_group }}
+          </div>
+          <div class="col-span-1">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">{{ course_form.sessions_per_week.label }}</label>
+            {{ course_form.sessions_per_week }}
+          </div>
           <div class="col-span-2">
             <button type="submit" class="w-full py-2.5 bg-brand-600 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:bg-brand-700 transition">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-              Add
+              Add Course
             </button>
           </div>
         </div>
@@ -395,7 +344,6 @@
       </div>
       <div>
         <h2 class="text-xl font-extrabold text-white">Ready to Generate?</h2>
-        <p class="text-brand-100 text-sm mt-1">All input data is validated. Execute the solver to produce your conflict-free weekly timetable.</p>
       </div>
     </div>
     <div class="flex gap-3 shrink-0">
@@ -403,34 +351,9 @@
         Execute Generation
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
       </a>
-      <a href="{% url 'export_csv' %}" class="px-6 py-3 bg-white/10 border border-white/20 text-white font-bold rounded-xl hover:bg-white/20 transition-colors">
-        Export CSV
-      </a>
     </div>
   </section>
  
 </main>
- 
-<!-- FOOTER -->
-<footer class="bg-white border-t border-gray-200 py-8 mt-12">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-      <div class="flex flex-col gap-1 items-center md:items-start">
-        <div class="flex items-center gap-2 text-brand-600 font-bold">
-          <svg class="w-5 h-5" fill="currentColor" viewbox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z"></path></svg>
-          <span class="text-sm">Automatic Timetable Generator</span>
-        </div>
-        <p class="text-[10px] text-gray-400">v2.4.0 • Enterprise Edition</p>
-      </div>
-      <nav class="flex gap-6 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-        <a class="hover:text-brand-600" href="#">Help Center</a>
-        <a class="hover:text-brand-600" href="#">Accessibility Statement</a>
-        <a class="hover:text-brand-600" href="#">Terms of Service</a>
-        <a class="hover:text-brand-600" href="#">Privacy Policy</a>
-      </nav>
-      <p class="text-xs text-gray-400">© 2026 ATG Systems. All rights reserved.</p>
-    </div>
-  </div>
-</footer>
- 
 </body></html>
+{% endblock %}
