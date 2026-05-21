@@ -1,8 +1,30 @@
+import math
 import random
+from datetime import time
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple
 
 from .models import Course, Room, ScheduledSession, TimeSlot
+
+
+def parse_blocked_days(blocked_days):
+    if not blocked_days:
+        return set()
+    return {d.strip().upper() for d in blocked_days.split(",") if d.strip()}
+
+
+def parse_time_window(window):
+    start_str, end_str = window.split("-")
+    sh, sm = start_str.strip().split(":")
+    eh, em = end_str.strip().split(":")
+    return time(int(sh), int(sm)), time(int(eh), int(em))
+
+
+def overlaps_mess(slot_start, slot_end, mess_window):
+    if not mess_window:
+        return False
+    mess_start, mess_end = parse_time_window(mess_window)
+    return slot_start < mess_end and mess_start < slot_end
 
 
 @dataclass
@@ -25,6 +47,10 @@ class GenerationResult:
         return not self.unscheduled
 
 
+def _sessions_for_course(course):
+    return max(1, math.ceil(course.contact_hours / 2))
+
+
 def _candidate_slots_for_lecturer(lecturer, all_slot_ids):
     avail = list(lecturer.available_slots.values_list('id', flat=True))
     if not avail:
@@ -45,13 +71,23 @@ def _build_sessions():
         return [], [], True
 
     all_slot_ids = [t.id for t in timeslots]
+    slot_day = {t.id: t.day for t in timeslots}
+    slot_times = {t.id: (t.start_time, t.end_time) for t in timeslots}
 
     sessions = []
     for c in courses:
+        blocked = parse_blocked_days(c.blocked_days)
+        mess = c.class_group.mess_window
         slot_ids = _candidate_slots_for_lecturer(c.lecturer, all_slot_ids)
+        slot_ids = {
+            sid for sid in slot_ids
+            if slot_day[sid] not in blocked
+            and not overlaps_mess(slot_times[sid][0], slot_times[sid][1], mess)
+        }
         room_ids = _candidate_rooms_for_group(c.class_group.size, rooms)
         candidates = [(s, r) for s in slot_ids for r in room_ids]
-        for i in range(c.sessions_per_week):
+        num_sessions = _sessions_for_course(c)
+        for i in range(num_sessions):
             sessions.append({
                 'course': c,
                 'session_index': i,
@@ -269,7 +305,6 @@ def _ga_fitness(chromo, sessions, slot_info, day_slot_index):
             compactness += (max(indices) - min(indices) + 1) - len(indices)
     spread = sum(max(0, n - 1) for n in course_day_count.values())
 
-    # Hard violations dominate; soft objectives only break ties between feasible solutions.
     return violations * 1000 + compactness + spread
 
 
