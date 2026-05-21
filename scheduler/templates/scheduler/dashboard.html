@@ -1,25 +1,131 @@
 {% extends "scheduler/base.html" %}
+{% block nav_dashboard %}bg-brand-50 text-brand-600{% endblock %}
 {% block content %}
-<div class="card">
-  <h2>Overview</h2>
-  <p>Welcome to the Automatic Timetable Generator. Use this tool to manage academic
-     resources and produce a conflict-free weekly schedule.</p>
-  <div class="grid">
-    <div class="stat"><div class="num">{{ counts.courses }}</div><div class="lbl">Courses</div></div>
-    <div class="stat"><div class="num">{{ counts.lecturers }}</div><div class="lbl">Lecturers</div></div>
-    <div class="stat"><div class="num">{{ counts.groups }}</div><div class="lbl">Class Groups</div></div>
-    <div class="stat"><div class="num">{{ counts.rooms }}</div><div class="lbl">Rooms</div></div>
-    <div class="stat"><div class="num">{{ counts.timeslots }}</div><div class="lbl">Time Slots</div></div>
-    <div class="stat"><div class="num">{{ counts.scheduled }}</div><div class="lbl">Scheduled Sessions</div></div>
-  </div>
+<!-- END: MainHeader -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+<!-- BEGIN: DashboardIntro -->
+<section class="flex flex-col md:flex-row justify-between items-start gap-6">
+<div class="max-w-2xl">
+<h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Dashboard Overview</h1>
+<p class="mt-2 text-gray-500">Monitor your scheduling ecosystem and trigger new conflict-free generation runs. Manage institutional data and review final generated weekly timetables.</p>
 </div>
 
-<div class="card">
-  <h2>Quick Actions</h2>
-  <div class="toolbar">
-    <a class="btn" href="{% url 'manage_data' %}">Manage Data</a>
-    <a class="btn btn-accent" href="{% url 'generate' %}">⚡ Generate Timetable</a>
-    <a class="btn btn-ghost" href="{% url 'timetable' %}">View Timetable</a>
-  </div>
+</section>
+<!-- END: DashboardIntro -->
+<!-- BEGIN: QuickStats -->
+<section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+<!-- Lecturers -->
+<div class="bg-white p-5 rounded-xl border border-gray-200 flex flex-col items-center text-center">
+<div class="w-12 h-12 bg-blue-50 text-brand-500 rounded-lg flex items-center justify-center mb-3">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
 </div>
+<p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Lecturers</p>
+<p class="text-2xl font-bold text-gray-900">{{ counts.lecturers }}</p>
+<p class="text-[10px] text-gray-500">Active teaching staff</p>
+</div>
+<!-- Rooms -->
+<div class="bg-white p-5 rounded-xl border border-gray-200 flex flex-col items-center text-center">
+<div class="w-12 h-12 bg-blue-50 text-brand-500 rounded-lg flex items-center justify-center mb-3">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Rooms</p>
+<p class="text-2xl font-bold text-gray-900">{{ counts.rooms }}</p>
+<p class="text-[10px] text-gray-500">Lecture &amp; Lab capacity</p>
+</div>
+<!-- Courses -->
+<div class="bg-white p-5 rounded-xl border border-gray-200 flex flex-col items-center text-center">
+<div class="w-12 h-12 bg-blue-50 text-brand-500 rounded-lg flex items-center justify-center mb-3">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Courses</p>
+<p class="text-2xl font-bold text-gray-900">{{ counts.courses }}</p>
+<p class="text-[10px] text-gray-500">Total active modules</p>
+</div>
+<!-- Class Groups -->
+<div class="bg-white p-5 rounded-xl border border-gray-200 flex flex-col items-center text-center">
+<div class="w-12 h-12 bg-blue-50 text-brand-500 rounded-lg flex items-center justify-center mb-3">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Class Groups</p>
+<p class="text-2xl font-bold text-gray-900">{{ counts.groups }}</p>
+<p class="text-[10px] text-gray-500">Student cohorts</p>
+</div>
+<!-- Time Slots -->
+<div class="bg-white p-5 rounded-xl border border-gray-200 flex flex-col items-center text-center">
+<div class="w-12 h-12 bg-blue-50 text-brand-500 rounded-lg flex items-center justify-center mb-3">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Time Slots</p>
+<p class="text-2xl font-bold text-gray-900">{{ counts.timeslots }}</p>
+<p class="text-[10px] text-gray-500">Weekly available slots</p>
+</div>
+<!-- Sessions -->
+<div class="bg-white p-5 rounded-xl border border-gray-200 flex flex-col items-center text-center">
+<div class="w-12 h-12 bg-blue-50 text-brand-500 rounded-lg flex items-center justify-center mb-3">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Sessions</p>
+<p class="text-2xl font-bold text-gray-900">{{ counts.scheduled }}</p>
+<p class="text-[10px] text-gray-500">Scheduled per week</p>
+</div>
+</section>
+<!-- END: QuickStats -->
+
+
+<!-- BEGIN: GuidedWorkflows -->
+<section class="space-y-6">
+<div class="border-b border-gray-200 pb-4">
+<h2 class="text-2xl font-bold text-gray-900">Guided Workflows</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Step 1 -->
+<div class="bg-white p-8 rounded-2xl border border-gray-200 relative group hover:border-brand-500 transition-colors">
+<span class="absolute top-8 right-8 text-[10px] font-black text-gray-300 uppercase tracking-widest">Step 1</span>
+<div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center mb-6">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h4 class="text-xl font-bold text-gray-900 mb-3">Manage Data</h4>
+<p class="text-sm text-gray-500 leading-relaxed mb-8">Input and maintain core entities like Lecturers, Rooms, and Courses. Ensure all foundational data is current before generation.</p>
+<div class="pt-6 border-t border-gray-50 flex items-center justify-between">
+<a class="text-brand-600 font-bold text-sm flex items-center gap-1 hover:gap-2 transition-all" href="{% url 'manage_data' %}">
+              Configure Now <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</a>
+<span class="px-2.5 py-1 bg-green-50 text-green-600 text-[10px] font-bold rounded-full border border-green-100 flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Ready
+            </span>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="bg-white p-8 rounded-2xl border border-gray-200 relative group hover:border-brand-500 transition-colors">
+<span class="absolute top-8 right-8 text-[10px] font-black text-gray-300 uppercase tracking-widest">Step 2</span>
+<div class="w-12 h-12 bg-blue-50 text-brand-500 rounded-xl flex items-center justify-center mb-6">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h4 class="text-xl font-bold text-gray-900 mb-3">Review Constraints</h4>
+<p class="text-sm text-gray-500 leading-relaxed mb-8">Set specific rules for time slots, room preferences, and lecturer availability. These constraints guide the solver.</p>
+<div class="pt-6 border-t border-gray-50">
+<a class="text-brand-600 font-bold text-sm flex items-center gap-1 hover:gap-2 transition-all" href="{% url 'manage_data' %}">
+              Configure Now <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</a>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="bg-white p-8 rounded-2xl border border-gray-200 relative group hover:border-brand-500 transition-colors">
+<span class="absolute top-8 right-8 text-[10px] font-black text-gray-300 uppercase tracking-widest">Step 3</span>
+<div class="w-12 h-12 bg-blue-50 text-brand-500 rounded-xl flex items-center justify-center mb-6">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-7.714 2.143L11 21l-2.286-6.857L1 12l7.714-2.143L11 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h4 class="text-xl font-bold text-gray-900 mb-3">Generate &amp; Export</h4>
+<p class="text-sm text-gray-500 leading-relaxed mb-8">Execute the solver to produce the conflict-free schedule. Review the visual grid and export for distribution.</p>
+<div class="pt-6 border-t border-gray-50">
+<a class="text-brand-600 font-bold text-sm flex items-center gap-1 hover:gap-2 transition-all" href="{% url 'generate' %}">
+              Configure Now <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</a>
+</div>
+</div>
+</div>
+</section>
+<!-- END: GuidedWorkflows -->
+</main>
+</body></html>
 {% endblock %}

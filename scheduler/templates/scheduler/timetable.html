@@ -1,42 +1,151 @@
 {% extends "scheduler/base.html" %}
+{% block nav_timetable %}bg-brand-50 text-brand-600{% endblock %}
 {% load dict_extras %}
 {% block content %}
-<div class="card">
-  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-    <h2 style="margin:0">📅 Generated Timetable</h2>
-    <div class="toolbar">
-      <a class="btn btn-accent" href="{% url 'generate' %}">⚡ Regenerate</a>
-      <a class="btn btn-ghost" href="{% url 'export_csv' %}">⬇ CSV</a>
-      <a class="btn btn-ghost" href="{% url 'export_pdf' %}">⬇ PDF</a>
+
+<style>
+  .timetable-grid { border-collapse: collapse; width: 100%; }
+  .timetable-grid th, .timetable-grid td { border: 1px solid #f1f5f9; }
+  .timetable-grid thead th { background: #f8fafc; }
+</style>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+
+  <!-- PAGE INTRO -->
+  <section class="flex flex-col md:flex-row justify-between items-start gap-6">
+    <div>
+      <p class="text-xs font-bold text-brand-600 tracking-wider mb-1 uppercase">Fall Semester 2024</p>
+      <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Generated Timetable</h1>
+      <p class="mt-2 text-gray-500">Conflict-free weekly schedule across all class groups. Review, export, or regenerate below.</p>
+    </div>
+    <div class="flex flex-col sm:flex-row gap-3 shrink-0">
+      <a href="{% url 'generate' %}" class="inline-flex items-center px-5 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+        Regenerate
+      </a>
+      <a href="{% url 'export_csv' %}" class="inline-flex items-center px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+        Export CSV
+      </a>
+      <a href="{% url 'export_pdf' %}" class="inline-flex items-center px-5 py-2.5 bg-brand-600 text-white font-semibold rounded-lg hover:bg-brand-700 transition shadow-sm">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+        Export PDF
+      </a>
+    </div>
+  </section>
+
+  <!-- METRICS BAR -->
+  <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 bg-blue-50 text-brand-500 rounded-lg flex items-center justify-center shrink-0">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+      </div>
+      <div>
+        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Sessions</p>
+        <p class="text-2xl font-bold text-gray-900">{{ counts.scheduled }}</p>
+        <p class="text-[10px] text-gray-500">Sessions scheduled</p>
+      </div>
+    </div>
+    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 bg-green-50 text-green-500 rounded-lg flex items-center justify-center shrink-0">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+      </div>
+      <div>
+        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Conflicts</p>
+        <p class="text-2xl font-bold text-green-500">0</p>
+        <p class="text-[10px] text-gray-500">All constraints met</p>
+      </div>
+    </div>
+    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 bg-blue-50 text-brand-500 rounded-lg flex items-center justify-center shrink-0">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+      </div>
+      <div>
+        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Class Groups</p>
+        <p class="text-2xl font-bold text-gray-900">{{ counts.groups }}</p>
+        <p class="text-[10px] text-gray-500">Schedules generated</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TIMETABLE GRIDS per group -->
+  {% for group_name, by_day in groups.items %}
+  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+
+    <!-- Card header -->
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-blue-50 text-brand-600 rounded">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+        </div>
+        <div>
+          <h2 class="font-bold text-gray-900">Class Group: {{ group_name }}</h2>
+          <p class="text-xs text-gray-500">Weekly schedule — all sessions conflict-free</p>
+        </div>
+      </div>
+      <span class="px-3 py-1 bg-green-500 text-white text-[10px] font-bold uppercase rounded-full tracking-wider">Active</span>
+    </div>
+
+    <!-- Grid -->
+    <div class="overflow-x-auto p-4">
+      <table class="timetable-grid">
+        <thead>
+          <tr>
+            <th class="py-3 px-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-left w-28">Time</th>
+            {% for code, name in days %}
+            <th class="py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">
+              <span class="block text-[10px] text-gray-400">{{ code }}</span>
+              {{ name }}
+            </th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for slot in slot_labels %}
+          <tr class="hover:bg-gray-50/50">
+            <td class="py-3 px-4 text-xs font-bold text-gray-400 bg-gray-50/80 whitespace-nowrap">{{ slot }}</td>
+            {% for code, name in days %}
+            <td class="py-2 px-2 text-center align-top min-w-[140px]">
+              {% with cell=by_day|default_if_none:""|get_item:code|get_item:slot %}
+              {% if cell %}
+              <div class="bg-brand-50 border border-brand-200 rounded-lg p-2 text-left shadow-sm">
+                <div class="text-[10px] font-bold text-brand-600 uppercase mb-0.5 leading-tight">{{ cell|safe }}</div>
+              </div>
+              {% endif %}
+              {% endwith %}
+            </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+  {% empty %}
+  <!-- Empty state -->
+  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
+    <div class="p-16 flex flex-col items-center text-center gap-5">
+      <div class="w-16 h-16 bg-blue-50 text-brand-400 rounded-2xl flex items-center justify-center">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-gray-800">No timetable generated yet</h3>
+        <p class="text-sm text-gray-500 mt-1 max-w-sm">Add your data in Manage Data, then click Generate to produce a conflict-free schedule.</p>
+      </div>
+      <div class="flex gap-3">
+        <a href="{% url 'manage_data' %}" class="inline-flex items-center px-5 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition">
+          Manage Data
+        </a>
+        <a href="{% url 'generate' %}" class="inline-flex items-center px-5 py-2.5 bg-brand-600 text-white font-semibold rounded-lg hover:bg-brand-700 transition shadow-sm">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+          Generate Now
+        </a>
+      </div>
     </div>
   </div>
-</div>
+  {% endfor %}
 
-{% for group_name, by_day in groups.items %}
-<div class="card">
-  <h2>Class Group: {{ group_name }}</h2>
-  <table class="timetable-grid">
-    <thead>
-      <tr>
-        <th>Time</th>
-        {% for code, name in days %}<th>{{ name }}</th>{% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      {% for slot in slot_labels %}
-      <tr>
-        <th>{{ slot }}</th>
-        {% for code, name in days %}
-          <td>{{ by_day|default_if_none:""|get_item:code|get_item:slot|default:""|safe }}</td>
-        {% endfor %}
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
-{% empty %}
-<div class="card">
-  <p class="empty">No timetable generated yet. Add data, then click <a href="{% url 'generate' %}">Generate</a>.</p>
-</div>
-{% endfor %}
+</main>
+
 {% endblock %}

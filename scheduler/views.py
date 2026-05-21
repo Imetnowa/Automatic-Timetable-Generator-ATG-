@@ -108,6 +108,10 @@ def _grid_data():
 
 def timetable_view(request):
     ctx = _grid_data()
+    ctx['counts'] = {
+        'scheduled': ScheduledSession.objects.count(),
+        'groups': ClassGroup.objects.count(),
+    }
     return render(request, 'scheduler/timetable.html', ctx)
 
 
