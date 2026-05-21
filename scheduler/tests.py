@@ -4,6 +4,8 @@ from django.test import TestCase
 
 from scheduler.algorithm import (
     Assignment,
+    overlaps_mess,
+    parse_blocked_days,
     schedule_backtracking,
     schedule_genetic,
     schedule_greedy,
@@ -34,7 +36,8 @@ def _make_courses(grp, lec, codes_with_counts):
     courses = []
     for code, n in codes_with_counts:
         c = Course.objects.create(
-            code=code, title=code, lecturer=lec, class_group=grp, sessions_per_week=n
+            code=code, title=code, lecturer=lec, class_group=grp,
+            sessions_per_week=n, contact_hours=n * 2,
         )
         courses.append(c)
     return courses
@@ -49,7 +52,6 @@ class ScoreScheduleTests(TestCase):
         course = Course.objects.create(
             code='C1', title='T', lecturer=lec, class_group=grp, sessions_per_week=2
         )
-        # Mon 8-10 and Mon 1-3: one empty slot (10-12) between them.
         assignments = [
             Assignment(course.id, lec.id, grp.id, slots[0].id, room.id),
             Assignment(course.id, lec.id, grp.id, slots[2].id, room.id),
@@ -61,7 +63,6 @@ class ScoreScheduleTests(TestCase):
         course = Course.objects.create(
             code='C1', title='T', lecturer=lec, class_group=grp, sessions_per_week=2
         )
-        # Both sessions on Monday: 1 duplicate.
         assignments = [
             Assignment(course.id, lec.id, grp.id, slots[0].id, room.id),
             Assignment(course.id, lec.id, grp.id, slots[1].id, room.id),
@@ -114,3 +115,58 @@ class GeneticImprovesSpreadTests(TestCase):
             schedule_genetic(seed=42, generations=100, population_size=50).assignments
         )['total']
         self.assertLessEqual(genetic_score, greedy_score)
+
+
+class HelperTests(TestCase):
+    def test_parse_blocked_days(self):
+        self.assertEqual(parse_blocked_days(""), set())
+        self.assertEqual(parse_blocked_days("WED,FRI"), {"WED", "FRI"})
+        self.assertEqual(parse_blocked_days("mon, tue "), {"MON", "TUE"})
+
+    def test_overlaps_mess(self):
+        self.assertTrue(overlaps_mess(time(10, 0), time(12, 0), "11:00-12:00"))
+        self.assertFalse(overlaps_mess(time(8, 0), time(10, 0), "11:00-12:00"))
+        self.assertFalse(overlaps_mess(time(13, 0), time(15, 0), "11:00-12:00"))
+        self.assertFalse(overlaps_mess(time(8, 0), time(10, 0), ""))
+
+
+class ContactHoursTests(TestCase):
+    def test_contact_hours_drive_session_count(self):
+        slots, room, lec, grp = _make_world()
+        course = Course.objects.create(
+            code='C1', title='T', lecturer=lec, class_group=grp, contact_hours=5
+        )
+        result = schedule_backtracking()
+        placed = [a for a in result.assignments if a.course_id == course.id]
+        # 5 contact hours / 2 = 3 sessions (rounded up)
+        self.assertEqual(len(placed), 3)
+
+
+class BlockedDaysTests(TestCase):
+    def test_blocked_days_excluded(self):
+        slots, room, lec, grp = _make_world()
+        course = Course.objects.create(
+            code='C1', title='T', lecturer=lec, class_group=grp,
+            contact_hours=2, blocked_days="MON,TUE,WED,THU",
+        )
+        result = schedule_backtracking()
+        slot_days = {
+            TimeSlot.objects.get(id=a.timeslot_id).day
+            for a in result.assignments if a.course_id == course.id
+        }
+        self.assertTrue(slot_days.issubset({"FRI"}))
+
+
+class MessWindowTests(TestCase):
+    def test_mess_window_excluded(self):
+        slots, room, lec, grp = _make_world()
+        grp.mess_window = "11:00-12:00"
+        grp.save()
+        course = Course.objects.create(
+            code='C1', title='T', lecturer=lec, class_group=grp, contact_hours=2
+        )
+        result = schedule_backtracking()
+        for a in result.assignments:
+            if a.course_id == course.id:
+                ts = TimeSlot.objects.get(id=a.timeslot_id)
+                self.assertFalse(overlaps_mess(ts.start_time, ts.end_time, "11:00-12:00"))
