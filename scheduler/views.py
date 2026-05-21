@@ -101,7 +101,7 @@ def _grid_data():
         gname = s.course.class_group.name
         groups.setdefault(gname, {d: {sl: '' for sl in slot_labels} for d in days})
         slot_label = f"{s.timeslot.start_time:%H:%M}-{s.timeslot.end_time:%H:%M}"
-        cell = f"{s.course.code} — {s.room.name}<br><small>{s.course.lecturer.name}</small>"
+        cell = f"{s.course.code} — {s.course.title}<br>{s.room.name}<br><small>{s.course.lecturer.name}</small>"
         groups[gname][s.timeslot.day][slot_label] = cell
     return {'groups': groups, 'slot_labels': slot_labels, 'days': DAYS_OF_WEEK}
 
