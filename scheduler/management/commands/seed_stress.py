@@ -48,22 +48,31 @@ class Command(BaseCommand):
         bce1 = ClassGroup.objects.create(name='BCE Year 1', size=28)
         bbm1 = ClassGroup.objects.create(name='BBM Year 1', size=50)
 
+        # contact_hours set so session counts match the original stress design.
         Course.objects.create(code='BIT201', title='Python Programming',
-                              lecturer=francis, class_group=bit2, sessions_per_week=3)
+                              lecturer=francis, class_group=bit2,
+                              credit_hours=3, contact_hours=6)   # 3 sessions
         Course.objects.create(code='BIT202', title='Databases',
-                              lecturer=ada, class_group=bit2, sessions_per_week=2)
+                              lecturer=ada, class_group=bit2,
+                              credit_hours=3, contact_hours=4)   # 2 sessions
         Course.objects.create(code='BIT203', title='Web Development',
-                              lecturer=kojo, class_group=bit2, sessions_per_week=2)
+                              lecturer=kojo, class_group=bit2,
+                              credit_hours=3, contact_hours=4)
         Course.objects.create(code='BCE101', title='Intro to Computing',
-                              lecturer=ada, class_group=bce1, sessions_per_week=2)
+                              lecturer=ada, class_group=bce1,
+                              credit_hours=3, contact_hours=4)
         Course.objects.create(code='BCE102', title='Mathematics',
-                              lecturer=kojo, class_group=bce1, sessions_per_week=2)
+                              lecturer=kojo, class_group=bce1,
+                              credit_hours=3, contact_hours=4)
         Course.objects.create(code='BBM101', title='Accounting',
-                              lecturer=francis, class_group=bbm1, sessions_per_week=2)
+                              lecturer=francis, class_group=bbm1,
+                              credit_hours=3, contact_hours=4)
         Course.objects.create(code='BBM102', title='Statistics',
-                              lecturer=joana, class_group=bbm1, sessions_per_week=2)
+                              lecturer=joana, class_group=bbm1,
+                              credit_hours=3, contact_hours=4)
         Course.objects.create(code='BBM103', title='Management',
-                              lecturer=ada, class_group=bbm1, sessions_per_week=1)
+                              lecturer=ada, class_group=bbm1,
+                              credit_hours=3, contact_hours=2)   # 1 session
 
         self.stdout.write(self.style.SUCCESS(
             "Stress data loaded: 16 sessions, 4 lecturers (tight windows), 3 groups, 2 rooms."

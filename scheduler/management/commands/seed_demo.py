@@ -34,25 +34,42 @@ class Command(BaseCommand):
         francis = Lecturer.objects.create(name='Mr. Francis Anlimah', email='francis@rmu.edu')
         ada = Lecturer.objects.create(name='Dr. Ada Mensah', email='ada@rmu.edu')
         kojo = Lecturer.objects.create(name='Mr. Kojo Boateng', email='kojo@rmu.edu')
+        nii = Lecturer.objects.create(name='Capt. Nii Armah', email='nii@rmu.edu')
 
-        # availability subsets
+        # Francis available Mon-Wed only; the rest are unconstrained.
         francis.available_slots.set(slots[:12])
-        ada.available_slots.set(slots[4:])
-        # kojo has no constraints
 
         bit2 = ClassGroup.objects.create(name='BIT Year 2', size=35)
         bce1 = ClassGroup.objects.create(name='BCE Year 1', size=28)
+        # Cadet group: mess 11:00-12:00, so the 10:00-12:00 slot is unavailable to them.
+        marine1 = ClassGroup.objects.create(name='Marine Eng Year 1', size=25,
+                                            mess_window='11:00-12:00')
 
+        # Number of sessions = ceil(contact_hours / 2).
         Course.objects.create(code='BIT201', title='Python Programming',
-                              lecturer=francis, class_group=bit2, sessions_per_week=2)
+                              lecturer=francis, class_group=bit2,
+                              credit_hours=3, contact_hours=5)   # 3 sessions
         Course.objects.create(code='BIT202', title='Databases',
-                              lecturer=ada, class_group=bit2, sessions_per_week=2)
+                              lecturer=ada, class_group=bit2,
+                              credit_hours=3, contact_hours=4,    # 2 sessions
+                              blocked_days='WED')                 # never on Wednesday
         Course.objects.create(code='BIT203', title='Web Development',
-                              lecturer=kojo, class_group=bit2, sessions_per_week=3)
+                              lecturer=kojo, class_group=bit2,
+                              credit_hours=3, contact_hours=4)    # 2 sessions
         Course.objects.create(code='BCE101', title='Intro to Computing',
-                              lecturer=ada, class_group=bce1, sessions_per_week=2)
+                              lecturer=ada, class_group=bce1,
+                              credit_hours=3, contact_hours=3)    # 2 sessions
         Course.objects.create(code='BCE102', title='Mathematics',
-                              lecturer=kojo, class_group=bce1, sessions_per_week=2)
+                              lecturer=kojo, class_group=bce1,
+                              credit_hours=3, contact_hours=3)    # 2 sessions
+        Course.objects.create(code='MAR101', title='Marine Engineering Fundamentals',
+                              lecturer=nii, class_group=marine1,
+                              credit_hours=3, contact_hours=4)    # 2 sessions
+        Course.objects.create(code='MAR102', title='Navigation',
+                              lecturer=nii, class_group=marine1,
+                              credit_hours=3, contact_hours=4)    # 2 sessions
 
         self.stdout.write(self.style.SUCCESS(
-            "Demo data loaded. Run `python manage.py runserver` and click Generate."))
+            "Demo data loaded. BIT201 has 5 contact hours (3 sessions), "
+            "BIT202 is blocked on Wednesday, and Marine Eng Year 1 has an "
+            "11:00-12:00 mess window. Run the server and click Generate."))
